@@ -1,0 +1,37 @@
+{
+  "//": "House gates — deterministic, independent of superpowers. These ENFORCE rules rather than request them. Adjust matchers/commands to your stack. Verify the hook schema against current Claude Code docs at adoption time.",
+
+  "hooks": {
+    "PostToolUse": [
+      {
+        "//": "Auto-lint every file the agent writes or edits, so style never drifts.",
+        "matcher": "Write|Edit",
+        "hooks": [
+          { "type": "command", "command": "pnpm lint --fix" }
+        ]
+      }
+    ],
+
+    "PreToolUse": [
+      {
+        "//": "Block destructive shell commands before they run. Exit code 2 blocks and feeds the message back to the agent. Harden this list to your real risk profile.",
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "grep -Eq 'rm -rf|git push --force|git push -f|DROP TABLE' <<< \"$CLAUDE_TOOL_INPUT\" && { echo 'Blocked: destructive command. A human must run this.' >&2; exit 2; } || exit 0"
+          }
+        ]
+      }
+    ],
+
+    "Stop": [
+      {
+        "//": "Before the agent declares a task done, type check and tests must pass. Red = not done.",
+        "hooks": [
+          { "type": "command", "command": "pnpm typecheck && pnpm test" }
+        ]
+      }
+    ]
+  }
+}

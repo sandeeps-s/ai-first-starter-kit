@@ -1,0 +1,15 @@
+# Covers JetBrains IDEs: IntelliJ, PyCharm, WebStorm, Android Studio, etc.
+# Reference: https://github.com
+
+*.iml
+*.ipr
+*.iws
+.idea/
+# Generated build artifacts
+out/
+
+# Log files
+*.log
+
+# Crash dumps
+clearcase.properties
