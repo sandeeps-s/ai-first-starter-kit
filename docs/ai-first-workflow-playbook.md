@@ -8,7 +8,7 @@
 
 ## 1. The idea in one minute
 
-We don't prompt the agent and hope. We write a spec the agent builds from, and keep humans on the hook at the points that matter.
+Humans write a clear spec, the agent builds from it, and humans review and merge the result
 
 ### The spec drives everything (Spec-Driven Development)
 
@@ -18,37 +18,68 @@ We use **Spec-Driven Development (SDD)**: nothing gets built until it's specifie
 2. **EARS acceptance criteria** — the rules the system must follow, written precisely.
 3. **Gherkin scenarios** — concrete Given/When/Then examples that prove each rule.
 
-The PO owns the stories and scenarios; the tech lead sharpens the criteria.
+**PO owns the spec** — user stories, acceptance criteria, and the scenarios that make each criterion executable. 
 
-### Two parallel tracks build it
+**Tech lead reviews the scenarios** for coverage and testability
+## Two parallel tracks build it
 
-Once the spec is agreed, work runs on **two parallel tracks** — both spec-driven, with the agent doing the typing:
+Once the spec is settled, the work splits into two tracks that run at the same time. Both follow the spec, and on both the human drives while the agent does the typing:
 
-- **Developers** build the features one scenario at a time, using **dual-loop BDD** — the Gherkin scenario as a failing acceptance test (outer loop), driven green by unit tests (inner loop).
-- **QA** builds the end-to-end suite from the journey spec.
+- **Developers** drive the agent to build the features one scenario at a time, using dual-loop BDD. The Gherkin scenario is the outer loop — a failing acceptance test that defines what "done" means — and the agent makes it pass through an inner loop of unit tests and code.
+- **QA** drives the agent to build the end-to-end suite from the journey spec.
 
-The tracks rejoin at QA. You review, you merge, you own it.
-
-That's the whole method. The rest of this doc is the detail.
+The two tracks come back together at QA, where the finished features are run against the end-to-end suite. A human reviews the result, merges it, and owns it.
 
 ---
 
 ## 2. The flow, end to end
 
 Two halves with a handoff between them: **PDLC** decides what to build, **SDLC** builds it. The agreed spec is the handoff — and after it, work **forks into two parallel tracks that rejoin at QA**: developers build the features, QA builds the end-to-end journey suite. Both run the same spec-driven loop; they just produce different code.
+Got it — no shared Plan. That means the handoff forks immediately, and Plan belongs *inside* the Feature Track (devs plan the architecture there) while the E2E Track runs alongside from the start. The two tracks meet at QA, and Review/Ship are shared after that.
+
+Updated diagram — the fork now sits directly under the handoff, and the Feature Track box carries Plan → Build:
+
+```
+                 Discovery ──► Spec
+                          │
+             ╔════════════▼════════════╗
+             ║         HANDOFF         ║
+             ╚════════════╤════════════╝
+                          │
+              ┌───────────┴───────────┐
+              ▼                       ▼
+    ┌───────────────────┐ ‖ ┌───────────────────┐
+    │   FEATURE TRACK   │ ‖ │     E2E TRACK     │  ◄══ run in parallel
+    │   Plan ─► Build   │ ‖ │  build E2E suite  │
+    └─────────┬─────────┘ ‖ └─────────┬─────────┘
+              └───────────┬───────────┘
+                          ▼
+                         QA            (tracks rejoin)
+                          │
+                  Review ──► Ship
+```
+### PDLC — decide what to build
 
 | Phase | Agent does | Human does | Gate |
 |---|---|---|---|
-| **PDLC — Discovery** | Synthesizes notes, clusters themes, drafts the problem | PO frames the real problem | PO decides it's worth building |
-| **PDLC — Spec** | Drafts stories, EARS, scenarios | PO owns stories + scenarios; tech lead sharpens EARS | **PO + tech lead sign off** |
-| **↓ Handoff** | — | The agreed spec crosses from product to engineering, then **forks** | — |
-| **SDLC — Plan** | Architecture/approach, no code yet | Reviews and corrects the architecture | **Human approves the plan** |
-| **SDLC — Build** *(feature track)* | Dual-loop BDD: scenario → failing test → code, one per PR | Devs steer; handle security-critical logic | Tests green; **step-def check** |
-| **SDLC — E2E** *(QA track, in parallel)* | Drafts the journey spec and tests; assists QA | **QA lead writes the journey spec** (PO reviews) and builds the suite from it | Suite reviewed & merged; **test-quality guardrails (§8)** |
-| **SDLC — QA** *(tracks rejoin)* | Runs the journey suite against the assembled features | QA + devs triage failures; close coverage gaps | **E2E journey passes** |
-| **SDLC — Review** | First-pass review (correctness, security) | Final review — matches the scenario, can explain it | **Human approves & merges** |
-| **SDLC — Ship & observe** | Runs the pipeline; feeds signals back | Owns the release; triages what comes back | All gates green |
+| **Discovery** | Synthesizes notes, clusters themes, drafts the problem statement | PO frames the real problem | PO decides it's worth building |
+| **Spec** | Drafts the stories, EARS criteria, and scenarios | PO owns all three; tech lead reviews the scenarios for coverage and testability | **PO signs off (tech lead has reviewed)** |
 
+> ### ⟶ HANDOFF — product to engineering
+> The agreed spec crosses from product to engineering and **forks straight into two parallel tracks that rejoin at QA**: the Feature Track plans and builds the features; the E2E Track builds the journey suite alongside it.
+
+Updated SDLC table — Plan and Build are both the Feature Track, E2E is the parallel track:
+
+| Phase                       | Agent does | Human does | Gate |
+|-----------------------------|---|---|---|
+| **Plan** *(Feature Track)*  | Architecture and approach, no code yet | Tech lead reviews and corrects the architecture | **Tech lead approves the plan** |
+| **Build** *(Feature Track)* | Dual-loop BDD: scenario → failing test → code, one per PR | Devs steer; handle security-critical logic | Tests pass; **step-definition check** |
+| **E2E** *(E2E Track — in parallel)* | Drafts the journey spec and tests; assists QA | **QA lead writes the journey spec** (PO reviews) and builds the suite from it | Suite reviewed and merged; **test-quality guardrails (§8)** |
+| **QA** *(tracks rejoin)*    | Runs the journey suite against the assembled features | QA and devs triage failures and close coverage gaps | **E2E journey passes** |
+| **Review**                  | First-pass review (correctness, security) | Final review — confirms it matches the scenario and can explain it | **Tech lead approves and merges** |
+| **Ship & observe**          | Runs the pipeline; feeds signals back | Owns the release; triages what comes back | All upstream gates green |
+
+This also lines up with your Section 1, which already says the work splits into two tracks as soon as the spec is settled — no shared plan step there either, so the two sections are now consistent. The PDLC table and intro are unchanged.
 PDLC and the gates are the human-owned parts; the agent does the building on both tracks in between. Sections 3–7 are the detail.
 
 ---
